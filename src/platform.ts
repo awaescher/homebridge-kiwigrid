@@ -1,7 +1,10 @@
+/* eslint-disable linebreak-style */
 import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, Service, Characteristic } from 'homebridge';
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { ExamplePlatformAccessory } from './platformAccessory';
+
+import axios from 'axios';
 
 /**
  * HomebridgePlatform
@@ -29,7 +32,7 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
       // run the method to discover / register your devices as accessories
-      this.discoverDevices();
+      this.discoverDevices(this.config.ip);
     });
   }
 
@@ -49,7 +52,18 @@ export class ExampleHomebridgePlatform implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  discoverDevices() {
+  async discoverDevices(ip: string) {
+
+    const url = ip + 'rest/kiwigrid/eps/powerValues';
+    this.log.info(url);
+
+    try {
+      const response = await axios.get(url);
+      this.log.info(response);
+    } catch (exception) {
+      process.stderr.write(`ERROR received from ${url}: ${exception}\n`);
+    }
+
 
     // EXAMPLE ONLY
     // A real plugin you would discover accessories from the local network, cloud services

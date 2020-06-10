@@ -1,16 +1,16 @@
 {
   "private": true,
-  "displayName": "Plugin Name",
-  "name": "homebridge-plugin-name",
+  "displayName": "Homebridge Kiwigrid",
+  "name": "homebridge-kiwigrid",
   "version": "1.0.0",
-  "description": "A short description about what your plugin does.",
+  "description": "A HomeBridge plugin to connect a local KiwiGrid installations (like Solarwatt EnergyManager) to HomeKit.",
   "license": "Apache-2.0",
   "repository": {
     "type": "git",
-    "url": "git://github.com/USERNAME/GITHUB_PROJECT_NAME.git"
+    "url": "https://github.com/awaescher/homebridge-kiwigrid.git"
   },
   "bugs": {
-    "url": "https://github.com/USERNAME/GITHUB_PROJECT_NAME/issues"
+    "url": "https://github.com/awaescher/homebridge-kiwigrid/issues"
   },
   "engines": {
     "node": ">=10.17.0",
@@ -26,7 +26,9 @@
   "keywords": [
     "homebridge-plugin"
   ],
-  "dependencies": {},
+  "dependencies": {
+    "axios": "^0.19.2"
+  },
   "devDependencies": {
     "@types/node": "^14.0.11",
     "@typescript-eslint/eslint-plugin": "^3.1.0",
