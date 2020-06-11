@@ -54,77 +54,86 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
    */
   async discoverDevices(ip: string) {
 
-    const url = ip + 'rest/kiwigrid/eps/powerValues';
+    const url = 'http://' + ip + '/rest/kiwigrid/wizard/devices';
     this.log.info(url);
 
     try {
       const response = await axios.get(url);
-      this.log.info(JSON.stringify(response));
+      const json = response.data;
+
+      // loop over the discovered devices and register each one if it has not already been registered
+      for (let i = 0; i < json.result.items.length; i++) {
+        const item = json.result.items[i];
+        const info = item.tagValues;
+
+        if (info.StateOfCharge) {
+
+          const battery = {
+            Guid: item.guid,
+            StateOfCharge: info.StateOfCharge.value,
+            IsCharging: info.ModeConverter.value === 'CHARGING',
+            Manufacturer: info.IdManufacturer.value,
+            Name: info.IdName.value,
+            Model: info.IdName.value,
+            StateOfHealth: info.StateOfHealth.value,
+            Temperature: info.TemperatureBattery.value,
+            IsHealthy: info.StateDevice.value === 'OK',
+            Firmware: info.IdFirmware.value,
+            ModuleCount: info.CountBatteryModules.value,
+            SerialNumber: info.IdSerialNumber.value,
+          };
+
+          // at least Solarwatt seems to put the SerialNumber into the Name
+          battery.Name = battery.Name.replace(battery.SerialNumber, '').trim();
+
+          this.log.info('Battery info: ' + JSON.stringify(battery));
+
+          this.RegisterAccessory(battery);
+        }
+      }
     } catch (exception) {
       process.stderr.write(`ERROR received from ${url}: ${exception}\n`);
     }
+  }
 
+  private RegisterAccessory(battery) {
+    const uuid = battery.Guid;
 
-    // EXAMPLE ONLY
-    // A real plugin you would discover accessories from the local network, cloud services
-    // or a user-defined array in the platform config.
-    const exampleDevices = [
-      {
-        exampleUniqueId: 'ABCD',
-        exampleDisplayName: 'Bedroom',
-      },
-      {
-        exampleUniqueId: 'EFGH',
-        exampleDisplayName: 'Kitchen',
-      },
-    ];
+    // see if an accessory with the same uuid has already been registered and restored from
+    // the cached devices we stored in the `configureAccessory` method above
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
-    // loop over the discovered devices and register each one if it has not already been registered
-    for (const device of exampleDevices) {
+    if (existingAccessory) {
+      // the accessory already exists
+      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-      // generate a unique id for the accessory this should be generated from
-      // something globally unique, but constant, for example, the device serial
-      // number or MAC address
-      const uuid = this.api.hap.uuid.generate(device.exampleUniqueId);
+      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+      // existingAccessory.context.device = device;
+      // this.api.updatePlatformAccessories([existingAccessory]);
+      // create the accessory handler for the restored accessory
+      // this is imported from `platformAccessory.ts`
+      new KiwiBatteryServiceAccessory(this.log, this, existingAccessory);
 
-      // see if an accessory with the same uuid has already been registered and restored from
-      // the cached devices we stored in the `configureAccessory` method above
-      const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+    } else {
+      // the accessory does not yet exist, so we need to create it
+      this.log.info('Adding new accessory:', battery.Name);
 
-      if (existingAccessory) {
-        // the accessory already exists
-        this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+      // create a new accessory
+      const accessory = new this.api.platformAccessory(battery.Name, uuid);
 
-        // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
-        // existingAccessory.context.device = device;
-        // this.api.updatePlatformAccessories([existingAccessory]);
+      // store a copy of the device object in the `accessory.context`
+      // the `context` property can be used to store any data about the accessory you may need
+      accessory.context.device = battery;
 
-        // create the accessory handler for the restored accessory
-        // this is imported from `platformAccessory.ts`
-        new KiwiBatteryServiceAccessory(this.log, this, existingAccessory);
+      // create the accessory handler for the newly create accessory
+      // this is imported from `platformAccessory.ts`
+      new KiwiBatteryServiceAccessory(this.log, this, accessory);
 
-      } else {
-        // the accessory does not yet exist, so we need to create it
-        this.log.info('Adding new accessory:', device.exampleDisplayName);
-
-        // create a new accessory
-        const accessory = new this.api.platformAccessory(device.exampleDisplayName, uuid);
-
-        // store a copy of the device object in the `accessory.context`
-        // the `context` property can be used to store any data about the accessory you may need
-        accessory.context.device = device;
-
-        // create the accessory handler for the newly create accessory
-        // this is imported from `platformAccessory.ts`
-        new KiwiBatteryServiceAccessory(this.log, this, accessory);
-
-        // link the accessory to your platform
-        this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
-      }
-
-      // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-      // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+      // link the accessory to your platform
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     }
 
+    // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
+    // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
   }
 }

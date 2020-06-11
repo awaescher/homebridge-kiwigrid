@@ -16,11 +16,16 @@ export class KiwiBatteryServiceAccessory {
     private readonly accessory: PlatformAccessory,
   ) {
 
+    const battery = accessory.context.device;
+
     // set accessory information
     this.accessory.getService(this.platform.Service.AccessoryInformation)!
-      .setCharacteristic(this.platform.Characteristic.Manufacturer, 'Default-Manufacturer')
-      .setCharacteristic(this.platform.Characteristic.Model, 'Default-Model')
-      .setCharacteristic(this.platform.Characteristic.SerialNumber, 'Default-Serial');
+      .setCharacteristic(this.platform.Characteristic.Manufacturer, battery.Manufacturer)
+      .setCharacteristic(this.platform.Characteristic.Model, battery.Model)
+      .setCharacteristic(this.platform.Characteristic.Identifier, battery.Guid)
+      .setCharacteristic(this.platform.Characteristic.FirmwareRevision, battery.Firmware)
+      .setCharacteristic(this.platform.Characteristic.TemperatureDisplayUnits, 0) // 0=Celsius, 1=Fahrenheit
+      .setCharacteristic(this.platform.Characteristic.SerialNumber, battery.SerialNumber);
 
     // get the BatteryService service if it exists, otherwise create a new BatteryService service
     // you can create multiple services for each accessory
@@ -32,61 +37,90 @@ export class KiwiBatteryServiceAccessory {
 
     // set the service name, this is what is displayed as the default name on the Home app
     // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, 'Kiwi');
+    this.service.setCharacteristic(this.platform.Characteristic.Name, battery.Name);
 
     // create handlers for required characteristics
     this.service.getCharacteristic(this.platform.Characteristic.BatteryLevel)
       .on('get', this.handleBatteryLevelGet.bind(this));
-  
+
     this.service.getCharacteristic(this.platform.Characteristic.ChargingState)
       .on('get', this.handleChargingStateGet.bind(this));
-  
+
     this.service.getCharacteristic(this.platform.Characteristic.StatusLowBattery)
       .on('get', this.handleStatusLowBatteryGet.bind(this));
+
+    this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+      .on('get', this.handleCurrentTemperatureBatteryGet.bind(this));
+
+    this.service.getCharacteristic(this.platform.Characteristic.StatusFault)
+      .on('get', this.handleStatusFaultBatteryGet.bind(this));
   }
 
-  
+
   /**
      * Handle requests to get the current value of the "Battery Level" characteristic
      */
   handleBatteryLevelGet(callback) {
     this.log.debug('Triggered GET BatteryLevel');
-  
+
     // set this to a valid value for BatteryLevel
     // 0 - 100
-    const currentValue = 15;
-  
-    callback(null, currentValue);
+    const battery = this.accessory.context.device;
+    callback(null, battery.StateOfCharge);
   }
-  
-  
+
+
   /**
      * Handle requests to get the current value of the "Charging State" characteristic
      */
   handleChargingStateGet(callback) {
     this.log.debug('Triggered GET ChargingState');
-  
+
     // set this to a valid value for ChargingState
     // 0 NOT_CHARGING
     // 1 CHARGING
     // 2 NOT_CHARGEABLE
-    const currentValue = 1;
-  
-    callback(null, currentValue);
+    const battery = this.accessory.context.device;
+    const mapped = ((battery.IsCharging) ? 1 : 0);
+    callback(null, mapped);
   }
-  
-  
+
+
   /**
      * Handle requests to get the current value of the "Status Low Battery" characteristic
      */
   handleStatusLowBatteryGet(callback) {
     this.log.debug('Triggered GET StatusLowBattery');
-  
+
     // set this to a valid value for StatusLowBattery
     // 0 NORMAL
     // 1 LOW
-    const currentValue = 1;
+    const battery = this.accessory.context.device;
+    const mapped = ((battery.StateOfCharge > 20) ? 0 : 1);
+    callback(null, mapped);
+  }
+
+  /**
+     * Handle requests to get the current value of the "Current Temperature" characteristic
+     */
+  handleCurrentTemperatureBatteryGet(callback) {
+    this.log.debug('Triggered GET CurrentTemperature');
+
+    const battery = this.accessory.context.device;
+    callback(null, battery.Temperature);
+  }
+
   
-    callback(null, currentValue);
+  /**
+     * Handle requests to get the current value of the "Status Fault" characteristic
+     */
+  handleStatusFaultBatteryGet(callback) {
+    this.log.debug('Triggered GET StatusFault');
+
+    // NO_FAULT = 0
+    // GENERAL_FAULT = 1
+    const battery = this.accessory.context.device;
+    const mapped = ((battery.IsHealthy) ? 0 : 1);
+    callback(null, mapped);
   }
 }

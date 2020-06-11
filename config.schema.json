@@ -6,10 +6,10 @@
     "type": "object",
     "properties": {
       "ip": {
-        "title": "IP address",
+        "title": "IP address: Digits only, use this link to try the connection first » http://0.0.0.0/rest/kiwigrid/eps/powerValues",
         "type": "string",
         "required": true,
-        "default": ""
+        "default": "0.0.0.0"
       }
     }
   }
