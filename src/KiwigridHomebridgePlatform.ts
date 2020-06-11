@@ -107,7 +107,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
       // the accessory already exists
       this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`. eg.:
+      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`
       existingAccessory.context.device = battery;
       this.api.updatePlatformAccessories([existingAccessory]);
 
