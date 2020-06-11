@@ -1,5 +1,4 @@
 {
-  "private": true,
   "displayName": "Homebridge Kiwigrid",
   "name": "homebridge-kiwigrid",
   "version": "1.0.0",
