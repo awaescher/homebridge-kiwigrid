@@ -1,0 +1,17 @@
+[
+    {
+        "id": "000d7425-665a-457f-af5a-a411e9723c6b",
+        "name": "Any Family, Any City",
+        "deviceClass": "com.kiwigrid.devices.pvplant.PVPlant",
+        "powerACOut": 999.90
+    },
+    {
+        "id": "000e4a09-854d-48d8-8b5e-c09245c92d02",
+        "name": "Standort",
+        "deviceClass": "com.kiwigrid.devices.location.Location",
+        "powerConsumed": 500.50,
+        "powerProduced": 2000.20,
+        "powerIn": 0,
+        "powerOut": 1
+    }
+]
