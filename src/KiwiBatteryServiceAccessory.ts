@@ -9,6 +9,7 @@ import { KiwigridHomebridgePlatform } from './KiwigridHomebridgePlatform';
  */
 export class KiwiBatteryServiceAccessory {
   private batteryService: Service;
+  private humidityService: Service;
 
   constructor(
     private readonly log: Logger,
@@ -29,13 +30,8 @@ export class KiwiBatteryServiceAccessory {
       .setCharacteristic(this.platform.Characteristic.TemperatureDisplayUnits, 0) // 0=Celsius, 1=Fahrenheit
       .setCharacteristic(this.platform.Characteristic.SerialNumber, battery.SerialNumber);
 
-    // get the BatteryService service if it exists, otherwise create a new BatteryService service
-    // you can create multiple services for each accessory
+    // BATTERY SERVICE
     this.batteryService = this.accessory.getService(this.platform.Service.BatteryService) || this.accessory.addService(this.platform.Service.BatteryService);
-
-    // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
-    // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
-    // this.accessory.getService('NAME') ?? this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE');
 
     this.batteryService.getCharacteristic(this.platform.Characteristic.BatteryLevel)
       .on('get', this.handleBatteryLevelGet.bind(this));
@@ -51,6 +47,14 @@ export class KiwiBatteryServiceAccessory {
 
     this.batteryService.getCharacteristic(this.platform.Characteristic.StatusFault)
       .on('get', this.handleStatusFaultBatteryGet.bind(this));
+
+    // HUMIDITY SERVICE (HACK)
+    this.humidityService = this.accessory.getService(this.platform.Service.HumiditySensor) || this.accessory.addService(this.platform.Service.HumiditySensor);
+
+    this.humidityService.setCharacteristic(this.platform.Characteristic.Name, battery.Name);
+
+    this.humidityService.getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity)
+      .on('get', this.handleBatteryLevelGet.bind(this)); // use battery level
   }
 
   /**
