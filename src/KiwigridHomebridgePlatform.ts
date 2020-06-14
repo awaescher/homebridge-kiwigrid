@@ -17,6 +17,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
+  private customPlatformAccessories: {[id:string] : IUpdatable;} = { };
 
   constructor(
     public readonly log: Logger,
@@ -43,7 +44,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
           this.updateDevices(url, false);
         }, this.config.refreshIntervalMinutes * 60 * 1000);
       } else {
-        log.debug('No refresh interval set');
+        log.debug('No refresh interval set'); 
       }
     });
   }
@@ -102,9 +103,9 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
           if (firstRun) {
             this.RegisterAccessory(battery);
-          } else {
-            this.UpdateBattery(battery);
-          }
+          } 
+
+          this.UpdateBattery(battery);
         }
       }
     } catch (exception) {
@@ -129,7 +130,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
       // create the accessory handler for the restored accessory
       // this is imported from `platformAccessory.ts`
-      new KiwiBatteryServiceAccessory(this.log, this, existingAccessory);
+      this.customPlatformAccessories[uuid] = new KiwiBatteryServiceAccessory(this.log, this, existingAccessory);
 
     } else {
       // the accessory does not yet exist, so we need to create it
@@ -144,7 +145,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
       // create the accessory handler for the newly create accessory
       // this is imported from `platformAccessory.ts`
-      new KiwiBatteryServiceAccessory(this.log, this, accessory);
+      this.customPlatformAccessories[uuid] = new KiwiBatteryServiceAccessory(this.log, this, accessory);
 
       // link the accessory to your platform
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
@@ -154,7 +155,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]); 
   }
 
-  private UpdateBattery(battery) {
+  private UpdateBattery(battery) { 
     const uuid = battery.Guid;
 
     // see if an accessory with the same uuid has already been registered and restored from
@@ -165,9 +166,14 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
       // the accessory already exists
       this.log.debug('Update: Restoring existing accessory from cache:', existingAccessory.displayName);
 
-      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`
       existingAccessory.context.device = battery;
+
+      this.customPlatformAccessories[uuid].Update(existingAccessory);
       this.api.updatePlatformAccessories([existingAccessory]);
-    }
+    } 
   }
+}
+
+export interface IUpdatable {
+  Update(accessory: PlatformAccessory);
 }
