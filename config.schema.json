@@ -6,10 +6,19 @@
     "type": "object",
     "properties": {
       "ip": {
-        "title": "IP address (digits only). Try the connection with this link » http://0.0.0.0/rest/kiwigrid/eps/powerValues",
+        "title": "IP address (digits only)",
         "type": "string",
         "required": true,
-        "default": "0.0.0.0"
+        "default": "0.0.0.0",
+        "description": "Try the connection with this link » http://IPADDRESS/rest/kiwigrid/eps/powerValues. You should be able to get a JSON response."
+      },
+      "refreshIntervalMinutes": {
+        "title": "Refresh interval in minutes",
+        "type": "integer",
+        "required": false,
+        "default": 5,
+        "minimum": 1,
+        "maximum": 2880
       }
     }
   }

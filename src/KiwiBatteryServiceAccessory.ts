@@ -61,11 +61,12 @@ export class KiwiBatteryServiceAccessory {
      * Handle requests to get the current value of the "Battery Level" characteristic
      */
   handleBatteryLevelGet(callback) {
-    this.log.debug('Triggered GET BatteryLevel');
 
     // set this to a valid value for BatteryLevel
     // 0 - 100
     const battery = this.accessory.context.device;
+    this.log.debug(`Triggered GET BatteryLevel (value: ${battery.StateOfCharge} updated:${battery.Updated})`);
+
     callback(null, battery.StateOfCharge);
   }
 
@@ -74,7 +75,6 @@ export class KiwiBatteryServiceAccessory {
      * Handle requests to get the current value of the "Charging State" characteristic
      */
   handleChargingStateGet(callback) {
-    this.log.debug('Triggered GET ChargingState');
 
     // set this to a valid value for ChargingState
     // 0 NOT_CHARGING
@@ -82,6 +82,9 @@ export class KiwiBatteryServiceAccessory {
     // 2 NOT_CHARGEABLE
     const battery = this.accessory.context.device;
     const mapped = ((battery.IsCharging) ? 1 : 0);
+
+    this.log.debug(`Triggered GET ChargingState (value: ${mapped} updated:${battery.Updated})`);
+    
     callback(null, mapped);
   }
 
@@ -90,13 +93,15 @@ export class KiwiBatteryServiceAccessory {
      * Handle requests to get the current value of the "Status Low Battery" characteristic
      */
   handleStatusLowBatteryGet(callback) {
-    this.log.debug('Triggered GET StatusLowBattery');
 
     // set this to a valid value for StatusLowBattery
     // 0 NORMAL
     // 1 LOW
     const battery = this.accessory.context.device;
     const mapped = ((battery.StateOfCharge > 20) ? 0 : 1);
+
+    this.log.debug(`Triggered GET StatusLowBattery (value: ${mapped} updated:${battery.Updated})`);
+
     callback(null, mapped);
   }
 
@@ -104,9 +109,11 @@ export class KiwiBatteryServiceAccessory {
      * Handle requests to get the current value of the "Current Temperature" characteristic
      */
   handleCurrentTemperatureBatteryGet(callback) {
-    this.log.debug('Triggered GET CurrentTemperature');
 
     const battery = this.accessory.context.device;
+
+    this.log.debug(`Triggered GET CurrentTemperature (value: ${battery.Temperature} updated:${battery.Updated})`);
+
     callback(null, battery.Temperature);
   }
 
@@ -115,12 +122,14 @@ export class KiwiBatteryServiceAccessory {
      * Handle requests to get the current value of the "Status Fault" characteristic
      */
   handleStatusFaultBatteryGet(callback) {
-    this.log.debug('Triggered GET StatusFault');
 
     // NO_FAULT = 0
     // GENERAL_FAULT = 1
     const battery = this.accessory.context.device;
     const mapped = ((battery.IsHealthy) ? 0 : 1);
+
+    this.log.debug(`Triggered GET StatusFault (value: ${mapped} updated:${battery.Updated})`);
+
     callback(null, mapped);
   }
 }

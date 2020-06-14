@@ -31,8 +31,20 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     // to start discovery of new accessories.
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
+
+      const url = 'http://' + this.config.ip + '/rest/kiwigrid/wizard/devices';
+
       // run the method to discover / register your devices as accessories
-      this.discoverDevices(this.config.ip);
+      this.updateDevices(url, true);
+
+      if (this.config.refreshIntervalMinutes > 0) {
+        log.debug('Refresh interval set to ' + this.config.refreshIntervalMinutes);
+        setTimeout(() => {
+          this.updateDevices(url, false);
+        }, this.config.refreshIntervalMinutes * 60 * 1000);
+      } else {
+        log.debug('No refresh interval set');
+      }
     });
   }
 
@@ -41,7 +53,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
    * It should be used to setup event handlers for characteristics and update respective values.
    */
   configureAccessory(accessory: PlatformAccessory) {
-    this.log.info('Loading accessory from cache:', accessory.displayName);
+    this.log.debug('Loading accessory from cache:', accessory.displayName);
 
     // add the restored accessory to the accessories cache so we can track if it has already been registered
     this.accessories.push(accessory);
@@ -52,10 +64,9 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
    * Accessories must only be registered once, previously created accessories
    * must not be registered again to prevent "duplicate UUID" errors.
    */
-  async discoverDevices(ip: string) {
+  async updateDevices(url: string, firstRun: boolean) {
 
-    const url = 'http://' + ip + '/rest/kiwigrid/wizard/devices';
-    this.log.info(url);
+    this.log.debug('Reading kiwigrid data from: ' + url);
 
     try {
       const response = await axios.get(url);
@@ -81,14 +92,19 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
             Firmware: info.IdFirmware.value,
             ModuleCount: info.CountBatteryModules.value,
             SerialNumber: info.IdSerialNumber.value,
+            Updated: Date.now(),
           };
 
           // at least Solarwatt seems to put the SerialNumber into the Name
           battery.Name = battery.Name.replace(battery.SerialNumber, '').trim();
 
-          this.log.info('Battery info: ' + JSON.stringify(battery));
+          this.log.debug('Battery info: ' + JSON.stringify(battery));
 
-          this.RegisterAccessory(battery);
+          if (firstRun) {
+            this.RegisterAccessory(battery);
+          } else {
+            this.UpdateBattery(battery);
+          }
         }
       }
     } catch (exception) {
@@ -105,7 +121,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
     if (existingAccessory) {
       // the accessory already exists
-      this.log.info('Restoring existing accessory from cache:', existingAccessory.displayName);
+      this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName);
 
       // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`
       existingAccessory.context.device = battery;
@@ -117,7 +133,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
     } else {
       // the accessory does not yet exist, so we need to create it
-      this.log.info('Adding new accessory:', battery.Name);
+      this.log.debug('Adding new accessory:', battery.Name);
 
       // create a new accessory
       const accessory = new this.api.platformAccessory(battery.Name, uuid);
@@ -135,6 +151,24 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     }
 
     // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-    // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]); 
+  }
+
+  
+  private UpdateBattery(battery) {
+    const uuid = battery.Guid;
+
+    // see if an accessory with the same uuid has already been registered and restored from
+    // the cached devices we stored in the `configureAccessory` method above
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+    if (existingAccessory) {
+      // the accessory already exists
+      this.log.debug('Update: Restoring existing accessory from cache:', existingAccessory.displayName);
+
+      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`
+      existingAccessory.context.device = battery;
+      this.api.updatePlatformAccessories([existingAccessory]);
+    }
   }
 }
