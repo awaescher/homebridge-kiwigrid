@@ -136,7 +136,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
       this.log.debug('Adding new accessory:', battery.Name);
 
       // create a new accessory
-      const accessory = new this.api.platformAccessory(battery.Name, uuid, this.api.hap.Categories.LIGHTBULB);
+      const accessory = new this.api.platformAccessory(battery.Name, uuid, this.api.hap.Categories.SENSOR);
 
       // store a copy of the device object in the `accessory.context`
       // the `context` property can be used to store any data about the accessory you may need
