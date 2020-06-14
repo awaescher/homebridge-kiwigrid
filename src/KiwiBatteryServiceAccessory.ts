@@ -29,7 +29,8 @@ export class KiwiBatteryServiceAccessory {
 
     // get the BatteryService service if it exists, otherwise create a new BatteryService service
     // you can create multiple services for each accessory
-    this.service = this.accessory.getService(this.platform.Service.BatteryService) || this.accessory.addService(this.platform.Service.BatteryService);
+    //this.service = this.accessory.getService(this.platform.Service.BatteryService) || this.accessory.addService(this.platform.Service.BatteryService);
+    this.service = this.accessory.getService(this.platform.Service.HumiditySensor) || this.accessory.addService(this.platform.Service.HumiditySensor);
 
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
     // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
@@ -41,6 +42,8 @@ export class KiwiBatteryServiceAccessory {
 
     // create handlers for required characteristics
     this.service.getCharacteristic(this.platform.Characteristic.BatteryLevel)
+      .on('get', this.handleBatteryLevelGet.bind(this));
+    this.service.getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity)
       .on('get', this.handleBatteryLevelGet.bind(this));
 
     this.service.getCharacteristic(this.platform.Characteristic.ChargingState)
