@@ -8,7 +8,7 @@ import { KiwigridHomebridgePlatform } from './KiwigridHomebridgePlatform';
  * Each accessory may expose multiple services of different service types.
  */
 export class KiwiBatteryServiceAccessory {
-  private service: Service;
+  private batteryService: Service;
 
   constructor(
     private readonly log: Logger,
@@ -19,7 +19,9 @@ export class KiwiBatteryServiceAccessory {
     const battery = accessory.context.device;
 
     // set accessory information
-    this.accessory.getService(this.platform.Service.AccessoryInformation)!
+    const accessoryService = this.accessory.getService(this.platform.Service.AccessoryInformation)!;
+
+    accessoryService
       .setCharacteristic(this.platform.Characteristic.Manufacturer, battery.Manufacturer)
       .setCharacteristic(this.platform.Characteristic.Model, battery.Model)
       .setCharacteristic(this.platform.Characteristic.Identifier, battery.Guid)
@@ -29,36 +31,27 @@ export class KiwiBatteryServiceAccessory {
 
     // get the BatteryService service if it exists, otherwise create a new BatteryService service
     // you can create multiple services for each accessory
-    //this.service = this.accessory.getService(this.platform.Service.BatteryService) || this.accessory.addService(this.platform.Service.BatteryService);
-    this.service = this.accessory.getService(this.platform.Service.HumiditySensor) || this.accessory.addService(this.platform.Service.HumiditySensor);
+    this.batteryService = this.accessory.getService(this.platform.Service.BatteryService) || this.accessory.addService(this.platform.Service.BatteryService);
 
     // To avoid "Cannot add a Service with the same UUID another Service without also defining a unique 'subtype' property." error,
     // when creating multiple services of the same type, you need to use the following syntax to specify a name and subtype id:
     // this.accessory.getService('NAME') ?? this.accessory.addService(this.platform.Service.Lightbulb, 'NAME', 'USER_DEFINED_SUBTYPE');
 
-    // set the service name, this is what is displayed as the default name on the Home app
-    // in this example we are using the name we stored in the `accessory.context` in the `discoverDevices` method.
-    this.service.setCharacteristic(this.platform.Characteristic.Name, battery.Name);
-
-    // create handlers for required characteristics
-    this.service.getCharacteristic(this.platform.Characteristic.BatteryLevel)
-      .on('get', this.handleBatteryLevelGet.bind(this));
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity)
+    this.batteryService.getCharacteristic(this.platform.Characteristic.BatteryLevel)
       .on('get', this.handleBatteryLevelGet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.ChargingState)
+    this.batteryService.getCharacteristic(this.platform.Characteristic.ChargingState)
       .on('get', this.handleChargingStateGet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.StatusLowBattery)
+    this.batteryService.getCharacteristic(this.platform.Characteristic.StatusLowBattery)
       .on('get', this.handleStatusLowBatteryGet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
+    this.batteryService.getCharacteristic(this.platform.Characteristic.CurrentTemperature)
       .on('get', this.handleCurrentTemperatureBatteryGet.bind(this));
 
-    this.service.getCharacteristic(this.platform.Characteristic.StatusFault)
+    this.batteryService.getCharacteristic(this.platform.Characteristic.StatusFault)
       .on('get', this.handleStatusFaultBatteryGet.bind(this));
   }
-
 
   /**
      * Handle requests to get the current value of the "Battery Level" characteristic
@@ -87,7 +80,7 @@ export class KiwiBatteryServiceAccessory {
     const mapped = ((battery.IsCharging) ? 1 : 0);
 
     this.log.debug(`Triggered GET ChargingState (value: ${mapped} updated:${battery.Updated})`);
-    
+
     callback(null, mapped);
   }
 
@@ -120,7 +113,7 @@ export class KiwiBatteryServiceAccessory {
     callback(null, battery.Temperature);
   }
 
-  
+
   /**
      * Handle requests to get the current value of the "Status Fault" characteristic
      */
