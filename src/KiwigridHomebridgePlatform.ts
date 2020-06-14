@@ -39,7 +39,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
       if (this.config.refreshIntervalMinutes > 0) {
         log.debug('Refresh interval set to ' + this.config.refreshIntervalMinutes);
-        setTimeout(() => {
+        setInterval(() => {
           this.updateDevices(url, false);
         }, this.config.refreshIntervalMinutes * 60 * 1000);
       } else {
@@ -154,7 +154,6 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]); 
   }
 
-  
   private UpdateBattery(battery) {
     const uuid = battery.Guid;
 
