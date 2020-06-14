@@ -48,7 +48,7 @@ export class KiwiBatteryServiceAccessory {
     this.batteryService.getCharacteristic(this.platform.Characteristic.StatusFault)
       .on('get', this.handleStatusFaultBatteryGet.bind(this));
 
-    // HUMIDITY SERVICE (HACK)
+    // HUMIDITY SERVICE (HACK to have a sensor with a battery attached - HomeKit does not support batteries as standalone yet)
     this.humidityService = this.accessory.getService(this.platform.Service.HumiditySensor) || this.accessory.addService(this.platform.Service.HumiditySensor);
 
     this.humidityService.setCharacteristic(this.platform.Characteristic.Name, battery.Name);
