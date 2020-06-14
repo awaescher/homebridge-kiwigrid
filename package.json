@@ -4,6 +4,11 @@
   "version": "1.1.0",
   "description": "A HomeBridge plugin to connect a local KiwiGrid installations (like Solarwatt EnergyManager) to HomeKit.",
   "license": "Apache-2.0",
+  "author": "Andreas Wäscher",
+  "maintainers": [
+    "Andreas Wäscher"
+  ],
+  "homepage": "https://github.com/awaescher/homebridge-kiwigrid",
   "repository": {
     "type": "git",
     "url": "https://github.com/awaescher/homebridge-kiwigrid.git"
@@ -23,7 +28,15 @@
     "prepublishOnly": "npm run lint && npm run build"
   },
   "keywords": [
-    "homebridge-plugin"
+    "homebridge-plugin",
+    "kiwigrid",
+    "kiwi",
+    "grid",
+    "solarwatt",
+    "energymanager",
+    "energy-manager",
+    "pv",
+    "photovoltaic"
   ],
   "dependencies": {
     "axios": "^0.19.2"
