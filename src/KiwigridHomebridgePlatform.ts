@@ -3,6 +3,7 @@ import { API, DynamicPlatformPlugin, Logger, PlatformAccessory, PlatformConfig, 
 
 import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { KiwiBatteryServiceAccessory } from './KiwiBatteryServiceAccessory';
+import { LiveStatsServiceAccessory } from './LiveStatsServiceAccessory';
 
 import axios from 'axios';
 
@@ -17,7 +18,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
   // this is used to track restored cached accessories
   public readonly accessories: PlatformAccessory[] = [];
-  private customPlatformAccessories: {[id:string] : IUpdatable;} = { };
+  private customPlatformAccessories: { [id: string]: IUpdatable; } = {};
 
   constructor(
     public readonly log: Logger,
@@ -33,18 +34,21 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
 
-      const url = 'http://' + this.config.ip + '/rest/kiwigrid/wizard/devices';
+      const devicesUrl = 'http://' + this.config.ip + '/rest/kiwigrid/wizard/devices';
+      const powerValuesUrl = 'http://' + this.config.ip + '/rest/kiwigrid/eps/powerValues';
 
       // run the method to discover / register your devices as accessories
-      this.updateDevices(url, true);
+      this.updateDevices(devicesUrl, true);
+      this.updatePowerValues(powerValuesUrl, true);
 
       if (this.config.refreshIntervalMinutes > 0) {
         log.debug('Refresh interval set to ' + this.config.refreshIntervalMinutes);
         setInterval(() => {
-          this.updateDevices(url, false);
+          this.updateDevices(devicesUrl, false);
+          this.updatePowerValues(powerValuesUrl, false);
         }, this.config.refreshIntervalMinutes * 60 * 1000);
       } else {
-        log.debug('No refresh interval set'); 
+        log.debug('No refresh interval set');
       }
     });
   }
@@ -67,7 +71,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
    */
   async updateDevices(url: string, firstRun: boolean) {
 
-    this.log.debug('Reading kiwigrid data from: ' + url);
+    this.log.debug('Reading devices from: ' + url);
 
     try {
       const response = await axios.get(url);
@@ -102,8 +106,8 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
           this.log.debug('Battery info: ' + JSON.stringify(battery));
 
           if (firstRun) {
-            this.RegisterAccessory(battery);
-          } 
+            this.RegisterBattery(battery);
+          }
 
           this.UpdateBattery(battery);
         }
@@ -113,64 +117,135 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  private RegisterAccessory(battery) {
+  async updatePowerValues(url: string, firstRun: boolean) {
+
+    this.log.debug('Reading powerValues from: ' + url);
+
+    try {
+      const response = await axios.get(url);
+      const json = response.data;
+
+      // loop over the discovered devices and register each one if it has not already been registered
+      for (let i = 0; i < json.length; i++) {
+        const item = json[i];
+
+        if (item.deviceClass.endsWith('Location')) {
+
+          const powerProduced =
+          {
+            Guid: '13d8be3d-4a38-4652-9f54-d8bb18e1226e',
+            Name: 'Power produced',
+            Emoji: '☀️',
+            Value: item.powerProduced,
+            PositiveBalance: true,
+          };
+
+          const powerConsumed =
+          {
+            Guid: '15985983-4f42-468d-b067-ce2fd59be71b',
+            Name: 'Power consumed',
+            Emoji: '🔌',
+            Value: item.powerConsumed,
+            PositiveBalance: false,
+          };
+
+          this.log.debug('powerProduced info: ' + JSON.stringify(powerProduced));
+          this.log.debug('powerConsumed info: ' + JSON.stringify(powerConsumed));
+
+          if (firstRun) {
+            this.RegisterLiveStats(powerProduced);
+            this.RegisterLiveStats(powerConsumed);
+          }
+
+          this.UpdateLiveStats(powerProduced);
+          this.UpdateLiveStats(powerConsumed);
+        }
+      }
+    } catch (exception) {
+      process.stderr.write(`ERROR received from ${url}: ${exception}\n`);
+    }
+  }
+
+  private RegisterBattery(battery) {
     const uuid = battery.Guid;
 
-    // see if an accessory with the same uuid has already been registered and restored from
-    // the cached devices we stored in the `configureAccessory` method above
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
     if (existingAccessory) {
-      // the accessory already exists
       this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName);
 
-      // if you need to update the accessory.context then you should run `api.updatePlatformAccessories`
       existingAccessory.context.device = battery;
       this.api.updatePlatformAccessories([existingAccessory]);
 
-      // create the accessory handler for the restored accessory
-      // this is imported from `platformAccessory.ts`
       this.customPlatformAccessories[uuid] = new KiwiBatteryServiceAccessory(this.log, this, existingAccessory);
 
     } else {
-      // the accessory does not yet exist, so we need to create it
       this.log.debug('Adding new accessory:', battery.Name);
 
-      // create a new accessory
       const accessory = new this.api.platformAccessory(battery.Name, uuid, this.api.hap.Categories.SENSOR);
 
-      // store a copy of the device object in the `accessory.context`
-      // the `context` property can be used to store any data about the accessory you may need
       accessory.context.device = battery;
 
-      // create the accessory handler for the newly create accessory
-      // this is imported from `platformAccessory.ts`
       this.customPlatformAccessories[uuid] = new KiwiBatteryServiceAccessory(this.log, this, accessory);
 
-      // link the accessory to your platform
       this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
     }
-
-    // it is possible to remove platform accessories at any time using `api.unregisterPlatformAccessories`, eg.:
-    // this.api.unregisterPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]); 
   }
 
-  private UpdateBattery(battery) { 
+  private UpdateBattery(battery) {
     const uuid = battery.Guid;
 
-    // see if an accessory with the same uuid has already been registered and restored from
-    // the cached devices we stored in the `configureAccessory` method above
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
     if (existingAccessory) {
-      // the accessory already exists
       this.log.debug('Update: Restoring existing accessory from cache:', existingAccessory.displayName);
 
       existingAccessory.context.device = battery;
 
       this.customPlatformAccessories[uuid].Update(existingAccessory);
       this.api.updatePlatformAccessories([existingAccessory]);
-    } 
+    }
+  }
+
+  private RegisterLiveStats(stats) {
+    const uuid = stats.Guid;
+
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+    if (existingAccessory) {
+      this.log.debug('Restoring existing accessory from cache:', existingAccessory.displayName);
+
+      existingAccessory.context.device = stats;
+      this.api.updatePlatformAccessories([existingAccessory]);
+
+      this.customPlatformAccessories[uuid] = new LiveStatsServiceAccessory(this.log, this, existingAccessory);
+
+    } else {
+      this.log.debug('Adding new accessory:', stats.Name);
+
+      const accessory = new this.api.platformAccessory(stats.Name, uuid);
+
+      accessory.context.device = stats;
+
+      this.customPlatformAccessories[uuid] = new LiveStatsServiceAccessory(this.log, this, accessory);
+
+      this.api.registerPlatformAccessories(PLUGIN_NAME, PLATFORM_NAME, [accessory]);
+    }
+  }
+
+  private UpdateLiveStats(stats) {
+    const uuid = stats.Guid;
+
+    const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
+
+    if (existingAccessory) {
+      this.log.debug('Update: Restoring existing accessory from cache:', existingAccessory.displayName);
+
+      existingAccessory.context.device = stats;
+
+      this.customPlatformAccessories[uuid].Update(existingAccessory);
+      this.api.updatePlatformAccessories([existingAccessory]);
+    }
   }
 }
 

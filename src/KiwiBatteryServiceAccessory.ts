@@ -43,7 +43,7 @@ export class KiwiBatteryServiceAccessory implements IUpdatable {
   Update(accessory: PlatformAccessory) {
     const battery = accessory.context.device;
 
-    const batteryLevel = battery.StateOfCharge; // 0 - 100
+    const batteryLevel = Math.round(battery.StateOfCharge); // 0 - 100
     const chargingState = ((battery.IsCharging) ? 1 : 0); // 0 NOT_CHARGING 1 CHARGING 2 NOT_CHARGEABLE
     const statusLowBattery = ((battery.StateOfCharge > 20) ? 0 : 1); // 0 NORMAL 1 LOW
     const temperature = battery.Temperature;
