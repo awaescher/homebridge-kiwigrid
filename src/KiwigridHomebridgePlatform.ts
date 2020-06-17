@@ -20,6 +20,9 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
   public readonly accessories: PlatformAccessory[] = [];
   private customPlatformAccessories: { [id: string]: IUpdatable; } = {};
 
+  // WAITING FOR CHANGABLE ACCESSORY NAMES
+  //private translations: string[] = [];
+ 
   constructor(
     public readonly log: Logger,
     public readonly config: PlatformConfig,
@@ -34,18 +37,26 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     this.api.on('didFinishLaunching', () => {
       log.debug('Executed didFinishLaunching callback');
 
+      // WAITING FOR CHANGABLE ACCESSORY NAMES
+      //this.translations = String(this.config.translations).split('|');
+
       const devicesUrl = 'http://' + this.config.ip + '/rest/kiwigrid/wizard/devices';
-      const powerValuesUrl = 'http://' + this.config.ip + '/rest/kiwigrid/eps/powerValues';
+
+      // WAITING FOR CHANGABLE ACCESSORY NAMES
+      //const powerValuesUrl = 'http://' + this.config.ip + '/rest/kiwigrid/eps/powerValues';
 
       // run the method to discover / register your devices as accessories
       this.updateDevices(devicesUrl, true);
-      this.updatePowerValues(powerValuesUrl, true);
+
+      // WAITING FOR CHANGABLE ACCESSORY NAMES
+      //this.updatePowerValues(powerValuesUrl, true);
 
       if (this.config.refreshIntervalMinutes > 0) {
         log.debug('Refresh interval set to ' + this.config.refreshIntervalMinutes);
         setInterval(() => {
           this.updateDevices(devicesUrl, false);
-          this.updatePowerValues(powerValuesUrl, false);
+          // WAITING FOR CHANGABLE ACCESSORY NAMES
+          //this.updatePowerValues(powerValuesUrl, false);
         }, this.config.refreshIntervalMinutes * 60 * 1000);
       } else {
         log.debug('No refresh interval set');
@@ -117,54 +128,55 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     }
   }
 
-  async updatePowerValues(url: string, firstRun: boolean) {
+  // WAITING FOR CHANGABLE ACCESSORY NAMES
+  // async updatePowerValues(url: string, firstRun: boolean) {
 
-    this.log.debug('Reading powerValues from: ' + url);
+  //   this.log.debug('Reading powerValues from: ' + url);
 
-    try {
-      const response = await axios.get(url);
-      const json = response.data;
+  //   try {
+  //     const response = await axios.get(url);
+  //     const json = response.data;
 
-      // loop over the discovered devices and register each one if it has not already been registered
-      for (let i = 0; i < json.length; i++) {
-        const item = json[i];
+  //     // loop over the discovered devices and register each one if it has not already been registered
+  //     for (let i = 0; i < json.length; i++) {
+  //       const item = json[i];
 
-        if (item.deviceClass.endsWith('Location')) {
+  //       if (item.deviceClass.endsWith('Location')) {
 
-          const powerProduced =
-          {
-            Guid: '13d8be3d-4a38-4652-9f54-d8bb18e1226e',
-            Name: 'Power produced',
-            Emoji: '☀️',
-            Value: item.powerProduced,
-            PositiveBalance: true,
-          };
+  //         const powerProduced =
+  //         {
+  //           Guid: '13d8be3d-4a38-4652-9f54-d8bb18e1226e',
+  //           Name: this.translations[0], // 'Power produced',
+  //           Emoji: '☀️',
+  //           Value: item.powerProduced,
+  //           PositiveBalance: true,
+  //         };
 
-          const powerConsumed =
-          {
-            Guid: '15985983-4f42-468d-b067-ce2fd59be71b',
-            Name: 'Power consumed',
-            Emoji: '🔌',
-            Value: item.powerConsumed,
-            PositiveBalance: false,
-          };
+  //         const powerConsumed =
+  //         {
+  //           Guid: '15985983-4f42-468d-b067-ce2fd59be71b',
+  //           Name: this.translations[1], // 'Power consumed',
+  //           Emoji: '🔌',
+  //           Value: item.powerConsumed,
+  //           PositiveBalance: false,
+  //         };
 
-          this.log.debug('powerProduced info: ' + JSON.stringify(powerProduced));
-          this.log.debug('powerConsumed info: ' + JSON.stringify(powerConsumed));
+  //         this.log.debug('powerProduced info: ' + JSON.stringify(powerProduced));
+  //         this.log.debug('powerConsumed info: ' + JSON.stringify(powerConsumed));
 
-          if (firstRun) {
-            this.RegisterLiveStats(powerProduced);
-            this.RegisterLiveStats(powerConsumed);
-          }
+  //         if (firstRun) {
+  //           this.RegisterLiveStats(powerProduced);
+  //           this.RegisterLiveStats(powerConsumed);
+  //         }
 
-          this.UpdateLiveStats(powerProduced);
-          this.UpdateLiveStats(powerConsumed);
-        }
-      }
-    } catch (exception) {
-      process.stderr.write(`ERROR received from ${url}: ${exception}\n`);
-    }
-  }
+  //         this.UpdateLiveStats(powerProduced);
+  //         this.UpdateLiveStats(powerConsumed);
+  //       }
+  //     }
+  //   } catch (exception) {
+  //     process.stderr.write(`ERROR received from ${url}: ${exception}\n`);
+  //   }
+  // }
 
   private RegisterBattery(battery) {
     const uuid = battery.Guid;
@@ -239,6 +251,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
     const existingAccessory = this.accessories.find(accessory => accessory.UUID === uuid);
 
     if (existingAccessory) {
+      existingAccessory.displayName = stats.Name;
       this.log.debug('Update: Restoring existing accessory from cache:', existingAccessory.displayName);
 
       existingAccessory.context.device = stats;

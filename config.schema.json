@@ -20,6 +20,14 @@
         "minimum": 1,
         "maximum": 1440
       }
+      // WAITING FOR CHANGABLE ACCESSORY NAMES
+      // "translations": {
+      //   "title": "Translations",
+      //   "type": "string",
+      //   "required": true,
+      //   "default": "Power produced|Power consumed",
+      //   "description": "Default: 'Power produced|Power consumed'"
+      // }
     }
   }
 }
