@@ -39,7 +39,8 @@
     "photovoltaic"
   ],
   "dependencies": {
-    "axios": "^0.19.2"
+    "axios": "^0.19.2",
+    "uuid-validate": "0.0.3"
   },
   "devDependencies": {
     "@types/node": "^14.0.11",
