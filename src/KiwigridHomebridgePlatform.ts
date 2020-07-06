@@ -5,6 +5,7 @@ import { PLATFORM_NAME, PLUGIN_NAME } from './settings';
 import { KiwiBatteryServiceAccessory } from './KiwiBatteryServiceAccessory';
 
 import axios from 'axios';
+import uuidvalidate from 'uuid-validate';
 
 /**
  * HomebridgePlatform
@@ -81,7 +82,7 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
         if (info.StateOfCharge) {
 
           const battery = {
-            Guid: item.guid,
+            Guid: uuidvalidate(item.guid) ? item.guid : this.api.hap.uuid.generate(item.guid),
             StateOfCharge: info.StateOfCharge.value,
             IsCharging: info.ModeConverter.value === 'CHARGING',
             Manufacturer: info.IdManufacturer.value,
