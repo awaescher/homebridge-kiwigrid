@@ -27,7 +27,7 @@ To use this Homebridge plugin, you need to know the IP address of your local API
 
 Scan your local network to find this device. If you find possible candidates, try them with this URL:
 
-    http://IPADDRESS/rest/kiwigrid/eps/powerValues
+    http://IPADDRESS/rest/kiwigrid/wizard/devices
 
 You should get a tiny JSON response immediately. If you do, congratulations, this is you local API gateway.
 
