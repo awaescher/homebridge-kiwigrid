@@ -10,7 +10,7 @@
         "type": "string",
         "required": true,
         "default": "0.0.0.0",
-        "description": "Try the connection with this link » http://IPADDRESS/rest/kiwigrid/eps/powerValues (you should get a JSON response). Does not work with online services like https://desktop.energymanager.com, for example."
+        "description": "Try the connection with this link » http://IPADDRESS/rest/kiwigrid/wizard/devices (you should get a JSON response). Does not work with online services like https://energymanager.com, for example."
       },
       "refreshIntervalMinutes": {
         "title": "Refresh interval in minutes",
