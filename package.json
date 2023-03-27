@@ -1,7 +1,7 @@
 {
   "displayName": "Homebridge Kiwigrid",
   "name": "homebridge-kiwigrid",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "description": "A HomeBridge plugin to connect local KiwiGrid installations (like Solarwatt EnergyManager) to HomeKit.",
   "license": "Apache-2.0",
   "author": "Andreas Wäscher",
