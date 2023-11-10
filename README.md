@@ -4,8 +4,6 @@
 
 </p>
 
-<span align="center">
-
 # Homebridge Kiwigrid Plugin
 
 This plugin brings the battery level of your Kiwigrid powered PV battery to HomeKit.
