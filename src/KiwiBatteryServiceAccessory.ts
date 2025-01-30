@@ -46,14 +46,16 @@ export class KiwiBatteryServiceAccessory implements IUpdatable {
     const batteryLevel = Math.round(battery.StateOfCharge); // 0 - 100
     const chargingState = ((battery.IsCharging) ? 1 : 0); // 0 NOT_CHARGING 1 CHARGING 2 NOT_CHARGEABLE
     const statusLowBattery = ((battery.StateOfCharge > 20) ? 0 : 1); // 0 NORMAL 1 LOW
-    const temperature = battery.Temperature;
     const faultState = ((battery.IsHealthy) ? 0 : 1); // NO_FAULT = 0 GENERAL_FAULT = 1
+    const temperature = battery.Temperature;
 
     this.batteryService.getCharacteristic(this.platform.Characteristic.BatteryLevel).updateValue(batteryLevel);
     this.batteryService.getCharacteristic(this.platform.Characteristic.ChargingState).updateValue(chargingState);
     this.batteryService.getCharacteristic(this.platform.Characteristic.StatusLowBattery).updateValue(statusLowBattery);
-    this.batteryService.getCharacteristic(this.platform.Characteristic.CurrentTemperature).updateValue(temperature);
     this.batteryService.getCharacteristic(this.platform.Characteristic.StatusFault).updateValue(faultState);
+    if (temperature !== null) {
+      this.batteryService.getCharacteristic(this.platform.Characteristic.CurrentTemperature).updateValue(temperature);
+    }
 
     this.humidityService.getCharacteristic(this.platform.Characteristic.CurrentRelativeHumidity).updateValue(batteryLevel);
 

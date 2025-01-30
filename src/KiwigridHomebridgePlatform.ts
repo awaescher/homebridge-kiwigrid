@@ -83,17 +83,17 @@ export class KiwigridHomebridgePlatform implements DynamicPlatformPlugin {
 
           const battery = {
             Guid: uuidvalidate(item.guid) ? item.guid : this.api.hap.uuid.generate(item.guid),
-            StateOfCharge: info.StateOfCharge.value,
-            IsCharging: info.ModeConverter.value === 'CHARGING',
-            Manufacturer: info.IdManufacturer.value,
-            Name: info.IdName.value,
-            Model: info.IdName.value,
-            StateOfHealth: info.StateOfHealth.value,
-            Temperature: info.TemperatureBattery.value,
-            IsHealthy: info.StateDevice.value === 'OK',
-            Firmware: info.IdFirmware.value,
-            ModuleCount: info.CountBatteryModules.value,
-            SerialNumber: info.IdSerialNumber.value,
+            StateOfCharge: info?.StateOfCharge?.value ?? 0,
+            IsCharging: info?.ModeConverter?.value === 'CHARGING',
+            Manufacturer: info?.IdManufacturer?.value ?? 'n/a',
+            Name: info?.IdName?.value ?? item.guid,
+            Model: info?.IdName?.value ?? item.guid,
+            StateOfHealth: info?.StateOfHealth?.value ?? null,
+            Temperature: info?.TemperatureBattery?.value ?? null,
+            IsHealthy: info?.StateDevice?.value === 'OK',
+            Firmware: info?.IdFirmware?.value ?? 'n/a',
+            ModuleCount: info?.CountBatteryModules?.value ?? null,
+            SerialNumber: info?.IdSerialNumber?.value ?? 'n/a',
             Updated: Date.now(),
           };
 
